@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/PROJECTS-SDE/MiniRedis/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
