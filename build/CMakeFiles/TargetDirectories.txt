@@ -1,3 +1,0 @@
-D:/PROJECTS-SDE/MiniRedis/build/CMakeFiles/miniredis.dir
-D:/PROJECTS-SDE/MiniRedis/build/CMakeFiles/edit_cache.dir
-D:/PROJECTS-SDE/MiniRedis/build/CMakeFiles/rebuild_cache.dir
