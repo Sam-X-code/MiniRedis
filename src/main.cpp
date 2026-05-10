@@ -1,7 +1,9 @@
-#include <iostream>
+#include "server.h"
 
 int main() {
-    std::cout << "MiniRedis Server Starting..." << std::endl;
+
+    Server server;
+    server.start();
 
     return 0;
 }
