@@ -49,20 +49,49 @@ int main(){
 
     std::cout << "Connected to server!" << std::endl;
 
-    const char* message = "Hello Server";
+    while(true){
+        std::string message;
+        std::cout << "> ";
+        std::getline(std::cin, message);
 
-    int bytesSent = send(
-        clientSocket,
-        message,
-        strlen(message),
-        0
-    );
+        if (message == "exit"){
+            break;
+        }
 
-    if (bytesSent == SOCKET_ERROR){
-        std::cout << "Send failed!" << std::endl;
-    }
-    else{
-        std::cout << "Message sent successfully!" << std::endl;
+        int bytesSent = send(
+            clientSocket,
+            message.c_str(),
+            message.length(),
+            0
+        );
+
+        if (bytesSent == SOCKET_ERROR){
+            std::cout << "Send failed!" << std::endl;
+            break;
+        }
+        
+        char buffer[1024];
+
+        int bytesReceived = recv(
+            clientSocket,
+            buffer,
+            sizeof(buffer),
+            0
+        );
+
+        if (bytesReceived == 0){
+            std::cout << "Server disconnected." << std::endl;
+            break;
+        }
+
+        if (bytesReceived == SOCKET_ERROR){
+            std::cout << "Receive failed!" << std::endl;
+            break;
+        }
+        else{
+            buffer[bytesReceived] = '\0';
+            std::cout << buffer << std::endl;
+        }
     }
 
     // Cleanup

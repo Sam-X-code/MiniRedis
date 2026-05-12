@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <winsock2.h>
 
 #include "server.h"
@@ -72,19 +73,40 @@ void Server::acceptClient(){
 
     char buffer[1024];
 
-    int bytesReceived = recv(
-        clientSocket,
-        buffer,
-        sizeof(buffer),
-        0
-    );
+    while(true){
+        int bytesReceived = recv(
+            clientSocket,
+            buffer,
+            sizeof(buffer),
+            0
+        );
 
-    if (bytesReceived == SOCKET_ERROR){
-        std::cout << "Receive failed!" << std::endl;
-    }
-    else{
+        if (bytesReceived == 0){
+            std::cout << "Client disconnected." << std::endl;
+            break;
+        }
+
+        if (bytesReceived == SOCKET_ERROR){
+            std::cout << "Receive failed!" << std::endl;
+            break;
+        }
+
         buffer[bytesReceived] = '\0';
-        std::cout << "Received: " << buffer << std::endl;
+
+        std::string response = commandHandler.execute(buffer);
+
+        int bytesSent = send(
+            clientSocket,
+            response.c_str(),
+            response.length(),
+            0
+        );
+
+        if (bytesSent == SOCKET_ERROR){
+            std::cout << "Failed to send response!" << std::endl;
+            break;
+        }
+        
     }
 
     closesocket(clientSocket);
@@ -94,6 +116,9 @@ void Server::cleanup(){
     closesocket(serverSocket);
     WSACleanup();
 }
+
+Server::Server()
+    : commandHandler(database){}
 
 void Server::start(){
     std::cout << "Starting MiniRedis Server..." << std::endl;
