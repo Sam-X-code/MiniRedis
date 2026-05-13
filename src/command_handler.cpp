@@ -47,6 +47,18 @@ std::string CommandHandler::execute(const std::string& command){
         return database.keys();
     }
 
+    if (tokens[0] == "EXPIRE"){
+        if (tokens.size() != 3){
+            return "Usage: EXPIRE <key> <seconds>";
+        }
+
+        int seconds = std::stoi(tokens[2]);
+
+        return database.expire(tokens[1], seconds)
+            ? "OK"
+            : "(nil)";
+    }
+
 
 
     return "Unknown command";

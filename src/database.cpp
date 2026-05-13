@@ -2,8 +2,11 @@
 
 void Database::set(const std::string& key , const std::string& value){
     std::lock_guard<std::mutex> lock(mutex);
-    
-    data[key] = value;
+
+    Value entry;
+    entry.data = value;
+    data[key] = entry;
+
 }
 
 std::string Database::get(const std::string& key){
@@ -15,7 +18,12 @@ std::string Database::get(const std::string& key){
         return "(nil)";
     }
 
-    return it->second;
+    if (it->second.hasExpiry && std::chrono::steady_clock::now() > it->second.expiry){
+        data.erase(it);
+        return "(nil)";
+    }
+
+    return it->second.data;
 }
 
 bool Database::del(const std::string& key){
@@ -43,4 +51,20 @@ std::string Database::keys(){
         return "(empty)";
     }
     return result;
+}
+
+bool Database::expire(const std::string& key, int seconds){
+    std::lock_guard<std::mutex> lock(mutex);
+
+    auto it = data.find(key);
+
+    if (it == data.end()) return false;
+
+    it->second.hasExpiry = true;
+
+    it->second.expiry =
+        std::chrono::steady_clock::now() +
+        std::chrono::seconds(seconds);
+
+    return true;
 }
