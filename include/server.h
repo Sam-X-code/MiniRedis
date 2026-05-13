@@ -21,7 +21,7 @@ private:
     bool createSocket();
     bool bindSocket();
     bool startListening();
-    void acceptClient();
+    void handleClient(SOCKET clientSocket);
     void cleanup();
 
     SOCKET serverSocket;

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <winsock2.h>
+#include <thread>
 
 #include "server.h"
 
@@ -60,15 +61,7 @@ bool Server::startListening(){
     return true;
 }
 
-void Server::acceptClient(){
-    std::cout << "Waiting for a client..." << std::endl;
-
-    SOCKET clientSocket = accept(serverSocket,nullptr,nullptr);
-    if (clientSocket == INVALID_SOCKET){
-        std::cout << "Accept failed!" << std::endl;
-        return;
-    }
-
+void Server::handleClient(SOCKET clientSocket){
     std::cout << "Client connected successfully!" << std::endl;
 
     char buffer[1024];
@@ -127,7 +120,28 @@ void Server::start(){
     if (!createSocket()) return;
     if (!bindSocket()) return;
     if (!startListening()) return;
-    acceptClient();
-    cleanup();
+
+    std::cout << "Waiting for clients..." << std::endl;
+
+    while (true){
+        SOCKET clientSocket = accept(
+            serverSocket,
+            nullptr,
+            nullptr
+        );
+
+        if (clientSocket == INVALID_SOCKET){
+            std::cout << "Accept failed!" << std::endl;
+            continue;
+        }
+
+        std::thread clientThread(
+            &Server::handleClient,
+            this,
+            clientSocket
+        );
+
+        clientThread.detach();
+    }
 
 }
