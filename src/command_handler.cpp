@@ -23,5 +23,31 @@ std::string CommandHandler::execute(const std::string& command){
         return database.get(tokens[1]);
     }
 
+    if (tokens[0] == "DEL"){
+        if (tokens.size() != 2){
+            return "Usage: DEL <key>";
+        }
+
+        if (database.del(tokens[1])){
+            return "OK";
+        }
+
+        return "(nil)";
+    }
+
+    if (tokens[0] == "EXISTS"){
+        if (tokens.size() != 2){
+            return "Usage: EXISTS <key>";
+        }
+
+        return database.exists(tokens[1]) ? "1" : "0";
+    }
+
+    if (tokens[0] == "KEYS"){
+        return database.keys();
+    }
+
+
+
     return "Unknown command";
 }
