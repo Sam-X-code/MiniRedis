@@ -59,6 +59,12 @@ std::string CommandHandler::execute(const std::string& command){
             : "(nil)";
     }
 
+    if (tokens[0] == "SAVE"){
+        return database.save("../dump.rdb")
+            ? "OK"
+            : "ERROR";
+    }
+
 
 
     return "Unknown command";

@@ -25,6 +25,9 @@ public:
     bool expire(const std::string& key, int seconds);
     std::string keys();
 
+    bool save(const std::string& filename);
+    bool load(const std::string& filename);
+
 private:
     std::unordered_map<std::string, Value> data;
     std::mutex mutex;

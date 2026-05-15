@@ -1,6 +1,9 @@
 # Build directory
 build/
 
+# Snapshot
+dump.rdb
+
 # CMake generated files
 CMakeCache.txt
 CMakeFiles/

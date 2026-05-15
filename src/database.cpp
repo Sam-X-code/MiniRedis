@@ -1,5 +1,7 @@
 #include "database.h"
+#include <fstream>
 
+// set.....................
 void Database::set(const std::string& key , const std::string& value){
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -9,6 +11,7 @@ void Database::set(const std::string& key , const std::string& value){
 
 }
 
+// get.........................
 std::string Database::get(const std::string& key){
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -26,12 +29,14 @@ std::string Database::get(const std::string& key){
     return it->second.data;
 }
 
+// del.........................
 bool Database::del(const std::string& key){
     std::lock_guard<std::mutex> lock(mutex);
 
     return data.erase(key) > 0;
 }
 
+// exist........................
 bool Database::exists(const std::string& key){
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -53,6 +58,7 @@ std::string Database::keys(){
     return result;
 }
 
+// expire.......................
 bool Database::expire(const std::string& key, int seconds){
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -65,6 +71,49 @@ bool Database::expire(const std::string& key, int seconds){
     it->second.expiry =
         std::chrono::steady_clock::now() +
         std::chrono::seconds(seconds);
+
+    return true;
+}
+
+// save to file .............................
+bool Database::save(const std::string& filename){
+    std::lock_guard<std::mutex> lock(mutex);
+
+    std::ofstream file(filename);
+
+    if (!file.is_open()){
+        return false;
+    }
+
+    for (const auto& pair : data){
+        file << pair.first << " "
+             << pair.second.data << "\n";
+    }
+
+    return true;
+}
+
+// load from file ...........................
+bool Database::load(const std::string& filename){
+    std::lock_guard<std::mutex> lock(mutex);
+
+    std::ifstream file(filename);
+
+    if (!file.is_open()){
+        return false;
+    }
+
+    data.clear();
+
+    std::string key;
+    std::string value;
+
+    while (file >> key >> value){
+        Value entry;
+        entry.data = value;
+
+        data[key] = entry;
+    }
 
     return true;
 }

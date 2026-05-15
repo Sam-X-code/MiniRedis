@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include <winsock2.h>
+#include <atomic>
 
 #include "command_handler.h"
 #include "database.h"
@@ -12,6 +13,7 @@ class Server
 public:
     Server();
     void start();
+    void shutdown();
 
 private:
     Database database;
@@ -23,6 +25,8 @@ private:
     bool startListening();
     void handleClient(SOCKET clientSocket);
     void cleanup();
+    void autoSave();
+    std::atomic<bool> running{true};
 
     SOCKET serverSocket;
     WSADATA wsaData;
