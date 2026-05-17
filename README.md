@@ -5,15 +5,6 @@
   TCP Sockets • Multithreading • Thread Safety • Persistence • CMake
 </p>
 
-<p align="center">
-
-
-
-
-\
-
-</p>
-
 ---
 
 ## 📖 Overview
