@@ -15,9 +15,21 @@ struct Value
     bool hasExpiry = false;
 };
 
+struct Node
+{
+    std::string key;
+    Value value;
+
+    Node* prev;
+    Node* next;
+
+    Node(const std::string& k,const Value& v): key(k), value(v), prev(nullptr),next(nullptr) {}
+};
+
 class Database
 {
 public:
+    ~Database();
     void set(const std::string& key, const std::string& value);
     std::string get(const std::string& key);
     bool del(const std::string& key);
@@ -28,9 +40,18 @@ public:
     bool save(const std::string& filename);
     bool load(const std::string& filename);
 
+    Node* head = nullptr;
+    Node* tail = nullptr;
+    size_t capacity = 3;
+
 private:
-    std::unordered_map<std::string, Value> data;
+    std::unordered_map<std::string, Node*> data;
     std::mutex mutex;
+
+    void addToFront(Node* node);
+    void removeNode(Node* node);
+    void moveToFront(Node* node);
+    void removeTail();
 };
 
 #endif
