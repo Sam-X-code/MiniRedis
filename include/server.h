@@ -3,6 +3,10 @@
 
 #include <winsock2.h>
 #include <atomic>
+#include <queue>
+#include <vector>
+#include <thread>
+#include <condition_variable>
 
 #include "command_handler.h"
 #include "database.h"
@@ -27,6 +31,13 @@ private:
     void cleanup();
     void autoSave();
     std::atomic<bool> running{true};
+
+    std::vector<std::thread> workers;
+    std::queue<SOCKET> clientQueue;
+
+    std::mutex queueMutex;
+    std::condition_variable condition;
+    void workerThread();
 
     SOCKET serverSocket;
     WSADATA wsaData;

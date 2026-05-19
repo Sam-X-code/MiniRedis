@@ -9,6 +9,7 @@
 
 Server* g_server = nullptr;
 constexpr int BUFFER_SIZE = 1024;
+constexpr int THREAD_COUNT = 4;
 constexpr const char* SNAPSHOT_FILE = "../dump.rdb";
 
 Server::Server()
@@ -28,6 +29,26 @@ BOOL WINAPI ConsoleHandler(DWORD signal){
     }
 
     return FALSE;
+}
+
+void Server::workerThread(){
+    while (running){
+        std::unique_lock<std::mutex> lock(queueMutex);
+
+        condition.wait(lock,
+        [this]
+        {
+            return !clientQueue.empty() || !running;
+        });
+
+        if (!running)
+            return;
+
+        SOCKET clientSocket = clientQueue.front();
+        clientQueue.pop();
+        lock.unlock();
+        handleClient(clientSocket);
+    }
 }
 
 bool Server::initializeWinsock(){
@@ -177,6 +198,13 @@ void Server::start(){
     std::thread autoSaveThread(&Server::autoSave, this);
     autoSaveThread.detach();
 
+    for (int i = 0; i < THREAD_COUNT; i++){
+        workers.emplace_back(
+            &Server::workerThread,
+            this
+        );
+    }
+
     std::cout << "Waiting for clients..." << std::endl;
 
     while (running){
@@ -196,13 +224,16 @@ void Server::start(){
             continue;
         }
 
-        std::thread clientThread(
-            &Server::handleClient,
-            this,
-            clientSocket
-        );
+        {   std::lock_guard<std::mutex> lock(queueMutex);
+            clientQueue.push(clientSocket); 
+        }
+        condition.notify_one();
+    }
 
-        clientThread.detach();
+    for(auto& worker : workers){
+        if(worker.joinable()){
+            worker.join();
+        }
     }
 
     cleanup();
@@ -212,6 +243,7 @@ void Server::shutdown(){
     if (!running) return;
 
     running = false;
+    condition.notify_all();
 
     std::cout << "\nSaving database before shutdown..." << std::endl;
 
