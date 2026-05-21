@@ -20,3 +20,8 @@ add_executable(client
 )
 
 target_link_libraries(client ws2_32)
+
+add_executable(test_hashtable
+        tests/test_hashtable.cpp)
+        
+target_include_directories(test_hashtable PRIVATE include)
