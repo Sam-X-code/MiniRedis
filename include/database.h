@@ -3,7 +3,7 @@
 
 #include <string>
 #include <mutex>
-#include <unordered_map>
+#include "hashtable.h"
 #include <chrono>
 
 struct Value
@@ -45,7 +45,7 @@ public:
     size_t capacity = 3;
 
 private:
-    std::unordered_map<std::string, Node*> data;
+    HashTable<Node*> data;
     std::mutex mutex;
 
     void addToFront(Node* node);

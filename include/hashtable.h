@@ -67,6 +67,24 @@ public:
        return true;
     }
 
+    void clear(){
+        table.clear();
+        table.resize(capacity);
+        currentSize = 0;
+    }
+
+    std::vector<std::pair<std::string, Value>> entries() const{
+        std::vector<std::pair<std::string, Value>> result;
+
+        for (const auto& bucket : table){
+            if (bucket.occupied){
+                result.push_back({bucket.key, bucket.value});
+            }
+        }
+
+        return result;
+    }
+
     size_t size() const{
         return currentSize;
     }

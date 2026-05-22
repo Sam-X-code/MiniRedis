@@ -55,11 +55,11 @@ void Database::removeTail(){
 void Database::set(const std::string& key, const std::string& value){
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto it = data.find(key);
+    Node** nodePtr = data.get(key);
 
-    // Key already exists
-    if (it != data.end()){
-        Node* node = it->second;
+    // key already exists
+    if (nodePtr != nullptr){
+        Node* node = *nodePtr;
         node->value.data = value;
         moveToFront(node);
         return;
@@ -75,20 +75,20 @@ void Database::set(const std::string& key, const std::string& value){
 
     Node* node = new Node(key, entry);
     addToFront(node);
-    data[key] = node;
+    data.insert(key, node);
 }
 
 // get.........................
 std::string Database::get(const std::string& key){
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto it = data.find(key);
+    Node** nodePtr = data.get(key);
 
-    if (it == data.end()){
+    if (nodePtr == nullptr){
         return "(nil)";
     }
 
-    Node* node = it->second;
+    Node* node = *nodePtr;
 
     if (node->value.hasExpiry &&
         std::chrono::steady_clock::now() > node->value.expiry){
@@ -107,36 +107,37 @@ std::string Database::get(const std::string& key){
 bool Database::del(const std::string& key){
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto it = data.find(key);
+    Node** nodePtr = data.get(key);
 
-    if (it == data.end()){
+    if (nodePtr == nullptr){
         return false;
     }
 
-    Node* node = it->second;
+    Node* node = *nodePtr;
+
     removeNode(node);
-    data.erase(it);
+    data.erase(key);
     delete node;
+
     return true;
 }
 
 // exist........................
-bool Database::exists(const std::string& key)
-{
+bool Database::exists(const std::string& key){
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto it = data.find(key);
+    Node** nodePtr = data.get(key);
 
-    if (it == data.end()){
+    if (nodePtr == nullptr){
         return false;
     }
 
-    Node* node = it->second;
+    Node* node = *nodePtr;
 
     if (node->value.hasExpiry &&
         std::chrono::steady_clock::now() > node->value.expiry){
         removeNode(node);
-        data.erase(it);
+        data.erase(key);
         delete node;
         return false;
     }
@@ -151,18 +152,16 @@ std::string Database::keys(){
 
     auto now = std::chrono::steady_clock::now();
 
-    for (auto it = data.begin(); it != data.end(); ){
-        Node* node = it->second;
+    for (auto& pair : data.entries()){
+        Node* node = pair.second;
 
-        if (node->value.hasExpiry &&
-            now > node->value.expiry){
+        if (node->value.hasExpiry && now > node->value.expiry){
             removeNode(node);
+            data.erase(pair.first);
             delete node;
-            it = data.erase(it);
         }
         else{
-            result += it->first + "\n";
-            ++it;
+            result += pair.first + "\n";
         }
     }
 
@@ -173,13 +172,13 @@ std::string Database::keys(){
 bool Database::expire(const std::string& key, int seconds){
     std::lock_guard<std::mutex> lock(mutex);
 
-    auto it = data.find(key);
+    Node** nodePtr = data.get(key);
 
-    if (it == data.end()){
+    if (nodePtr == nullptr){
         return false;
     }
 
-    Node* node = it->second;
+    Node* node = *nodePtr;
     node->value.hasExpiry = true;
 
     node->value.expiry =
@@ -199,10 +198,11 @@ bool Database::save(const std::string& filename){
         return false;
     }
 
-    for (const auto& pair : data){
+    for (const auto& pair : data.entries()){
         Node* node = pair.second;
 
-        file << node->key << " " << node->value.data << "\n";
+        file << pair.first << " "
+            << node->value.data << "\n";
     }
 
     return true;
@@ -238,7 +238,7 @@ bool Database::load(const std::string& filename){
         Node* node = new Node(key, entry);
         addToFront(node);
 
-        data[key] = node;
+        data.insert(key, node);
     }
 
     return true;
