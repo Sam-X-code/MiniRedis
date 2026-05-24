@@ -2,42 +2,45 @@
 
 <p align="center">
   <b>A Redis-inspired in-memory key-value database built from scratch in C++.</b><br>
-  TCP Sockets • Multithreading • Thread Safety • Persistence • CMake
+  Custom Hash Table • LRU Cache • TCP Sockets • Multithreading • Persistence • CMake
 </p>
 
 ---
 
-## 📖 Overview
+# 📖 Overview
 
-MiniRedis is a lightweight Redis-inspired in-memory database implemented in **C++**. It demonstrates the core concepts behind modern backend systems, including TCP networking, concurrent client handling, thread-safe data storage, command parsing, TTL-based expiration, snapshot persistence, and graceful server shutdown.
+MiniRedis is a lightweight Redis-inspired in-memory key-value database implemented entirely in **C++**. It demonstrates how modern in-memory databases work internally by implementing the core building blocks from scratch instead of relying on STL containers.
 
-The project is designed to understand how a real key-value database works internally rather than relying on external libraries.
+The project features a multithreaded TCP server, a custom hash table with open addressing and linear probing, an LRU eviction policy, TTL-based key expiration, snapshot persistence, and graceful shutdown.
 
 ---
 
-## ✨ Features
+# ✨ Features
 
-* ✅ TCP client-server architecture using Winsock
-* ✅ Multi-client support using `std::thread`
+* ✅ TCP client-server architecture using Winsock2
+* ✅ Concurrent client handling using `std::thread`
 * ✅ Thread-safe database using `std::mutex`
-* ✅ In-memory storage with `std::unordered_map`
-* ✅ Redis-inspired commands
-
-  * `SET`
-  * `GET`
-  * `DEL`
-  * `EXISTS`
-  * `KEYS`
-  * `EXPIRE`
-  * `SAVE`
+* ✅ **Custom Hash Table** (FNV-1a hashing, linear probing, dynamic rehashing)
+* ✅ **LRU Cache** implemented using a doubly linked list
+* ✅ TTL-based key expiration
 * ✅ Snapshot persistence (`dump.rdb`)
 * ✅ Automatic background snapshots
 * ✅ Graceful shutdown with final database save
 * ✅ Modular architecture following separation of concerns
 
+### Supported Commands
+
+* `SET`
+* `GET`
+* `DEL`
+* `EXISTS`
+* `KEYS`
+* `EXPIRE`
+* `SAVE`
+
 ---
 
-## 🏗️ Architecture
+# 🏗️ Architecture
 
 ```text
                 Client 1
@@ -65,18 +68,17 @@ The project is designed to understand how a real key-value database works intern
                     ▼
                 Database
                     │
-              std::mutex
-                    │
-                    ▼
-            unordered_map
-                    │
-                    ▼
-               dump.rdb
+          ┌─────────┴─────────┐
+          ▼                   ▼
+   Custom Hash Table      LRU Cache
+          │
+          ▼
+      Snapshot (dump.rdb)
 ```
 
 ---
 
-## 📂 Project Structure
+# 📂 Project Structure
 
 ```text
 MiniRedis/
@@ -87,6 +89,7 @@ MiniRedis/
 ├── include/
 │   ├── command_handler.h
 │   ├── database.h
+│   ├── hashtable.h
 │   ├── parser.h
 │   └── server.h
 │
@@ -97,6 +100,9 @@ MiniRedis/
 │   ├── server.cpp
 │   └── main.cpp
 │
+├── tests/
+│   └── test_hashtable.cpp
+│
 ├── CMakeLists.txt
 ├── README.md
 └── .gitignore
@@ -104,20 +110,21 @@ MiniRedis/
 
 ---
 
-## ⚙️ Tech Stack
+# ⚙️ Tech Stack
 
 * **Language:** C++17
 * **Networking:** Winsock2 (TCP)
-* **Build System:** CMake
 * **Concurrency:** `std::thread`
 * **Synchronization:** `std::mutex`, `std::lock_guard`
-* **Storage:** `std::unordered_map`
+* **Hashing:** FNV-1a
+* **Data Structures:** Custom Hash Table, Doubly Linked List (LRU)
+* **Build System:** CMake
 * **Persistence:** File I/O (`fstream`)
 * **Timing:** `std::chrono`
 
 ---
 
-## 💻 Supported Commands
+# 💻 Supported Commands
 
 | Command              | Description            |
 | -------------------- | ---------------------- |
@@ -131,7 +138,7 @@ MiniRedis/
 
 ---
 
-## 🧪 Example Session
+# 🧪 Example Session
 
 ```text
 > SET name Shivam
@@ -158,31 +165,54 @@ OK
 
 ---
 
-## 💾 Persistence
+# 💾 Persistence
 
-MiniRedis supports snapshot persistence.
+MiniRedis supports snapshot persistence to ensure data durability.
 
 * Loads the latest snapshot during startup.
-* Manual snapshots using the `SAVE` command.
-* Automatic snapshots in a background thread.
-* Final snapshot during graceful shutdown.
+* Supports manual snapshots using the `SAVE` command.
+* Creates automatic background snapshots.
+* Saves the database before graceful shutdown.
 
 ---
 
-## 🎯 Key Concepts Demonstrated
+# 🧠 Internal Design
+
+### Custom Hash Table
+
+* Open Addressing
+* Linear Probing
+* FNV-1a Hash Function
+* Dynamic Rehashing
+* Tombstone-based Deletion
+
+### LRU Cache
+
+* Doubly Linked List
+* O(1) insertion
+* O(1) deletion
+* O(1) access
+* Automatic eviction when capacity is reached
+
+---
+
+# 🎯 Key Concepts Demonstrated
 
 * TCP Socket Programming
 * Client-Server Architecture
 * Concurrent Programming
 * Thread Synchronization
-* Command Parsing
-* In-Memory Databases
+* Custom Hash Table Implementation
+* LRU Cache Design
+* Open Addressing & Linear Probing
 * Snapshot Persistence
+* In-Memory Databases
 * Object-Oriented Design
 * Modular Software Architecture
 
 ---
 
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 **Shivam Sachan**
+
